@@ -67,3 +67,34 @@ You can choose any of the below actions to solve the issue
 2- Ask your vendor "the entity who has control over account 240140-489168 and vpc-0df3995c93dc23e32" to check their AZ IDs mapping Availability Zone IDs for your AWS resources - AWS Resource Access Manager And to create new subnet in the AZ that have the same "ZoneId": "apse2-az1" , then they need to create new EC2 in this subnet and you should be able to use it to access the VPC endpoint.
 
  
+ 
+# run following sql to check Redshift connection is established 
+ 
+select s.process as process_id,
+       c.remotehost || ':' || c.remoteport as remote_address,
+       s.user_name as username,
+       s.starttime as session_start_time,
+       s.db_name,
+       i.starttime as current_query_time,
+       i.text as query 
+from stv_sessions s
+left join pg_user u on u.usename = s.user_name
+left join stl_connection_log c
+          on c.pid = s.process
+          and c.event = 'authenticated'
+left join stv_inflight i 
+          on u.usesysid = i.userid
+          and s.process = i.pid
+where username <> 'rdsdb'
+order by session_start_time desc;
+
+
+![image](https://user-images.githubusercontent.com/36766101/161190856-e99b1b0f-9d58-44c1-aab3-524844663dde.png)
+
+
+After check the connection come from ip address 10.240.85.122 which is the nlb IP.
+
+![image](https://user-images.githubusercontent.com/36766101/161190908-4a6b7b0d-c1bd-46b9-b6d2-6b417f92b62b.png)
+
+
+![image](https://user-images.githubusercontent.com/36766101/161191050-2a4effc7-3806-4cd3-9011-c9bdd513baff.png)
